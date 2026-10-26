@@ -73,8 +73,6 @@ erDiagram
 | `docs/index.html` | Static dashboard, published with GitHub Pages |
 | `gen.py` | Script that generated the sample data and dashboard figures |
 
-## Live dashboard
-**[View the dashboard](https://YOUR-USERNAME.github.io/YOUR-REPO/)** (replace with your GitHub Pages link; setup steps below)
 
 It shows revenue KPIs, weekly revenue, revenue by category, top products, items that need reordering and slow-moving stock.
 
@@ -83,16 +81,5 @@ It shows revenue KPIs, weekly revenue, revenue by category, top products, items 
 - `vw_SlowMovers`: products with no sales in 90 days, with capital tied up
 - `usp_GenerateReorders`: creates one purchase order per supplier for low-stock items, skipping products already on order
 
-## How to run
-1. Open SSMS and run `schema.sql`.
-2. Run `seed_data.sql`.
-3. Try `SELECT * FROM dbo.vw_ReorderNeeded;` then `EXEC dbo.usp_GenerateReorders;`
-4. Run the queries in `queries/dashboard_queries.sql` to reproduce each dashboard panel.
 
-## Publishing the dashboard (GitHub Pages)
-1. Push this repo to GitHub.
-2. Repo **Settings > Pages > Build and deployment**: Source = *Deploy from a branch*, Branch = `main`, folder = `/docs`.
-3. After a minute the dashboard is live at `https://<your-username>.github.io/<repo-name>/`.
 
-## Sample results
-_Add screenshots of query outputs here once seed data is loaded._
