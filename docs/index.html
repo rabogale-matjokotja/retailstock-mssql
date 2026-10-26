@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RetailStock Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#1a2030;--muted:#6b7385;--line:#e4e7ec;--accent:#2f6fed;--bad:#d64545;--warn:#d98a1f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 22px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.kpi .l{color:var(--muted);font-size:13px}
+.kpi .v{font-size:26px;font-weight:650;margin-top:2px}
+.two{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px}
+.chart{position:relative;height:300px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.num{text-align:right}
+.badge{display:inline-block;min-width:32px;text-align:center;padding:1px 8px;border-radius:99px;font-size:13px;font-weight:600}
+.bad{background:#fde8e8;color:var(--bad)}.warn{background:#fdf1de;color:var(--warn)}
+.scroll{overflow-x:auto}
+footer{color:var(--muted);font-size:13px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RetailStock: Inventory &amp; Sales Dashboard</h1>
+  <p class="sub">Sample dataset, <span id="period"></span>. Every panel comes from a query in <code>queries/dashboard_queries.sql</code>, run against SQL Server.</p>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="grid two">
+    <div class="card"><h2>Weekly revenue</h2><div class="chart"><canvas id="weekly"></canvas></div></div>
+    <div class="card"><h2>Revenue by category</h2><div class="chart"><canvas id="cats"></canvas></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px"><h2>Top 10 products by revenue</h2><div class="chart"><canvas id="top"></canvas></div></div>
+
+  <div class="grid two">
+    <div class="card scroll"><h2>Needs reordering (<code>vw_ReorderNeeded</code>)</h2>
+      <table><thead><tr><th>Product</th><th>Supplier</th><th class="num">On hand</th><th class="num">Reorder at</th><th class="num">Lead</th></tr></thead><tbody id="reorder"></tbody></table></div>
+    <div class="card scroll"><h2>Slow movers, no sales (<code>vw_SlowMovers</code>)</h2>
+      <table><thead><tr><th>Product</th><th class="num">On hand</th><th class="num">Capital tied up</th></tr></thead><tbody id="slow"></tbody></table></div>
+  </div>
+
+  <footer>Built with MS SQL Server (T-SQL) and Chart.js. Figures are static output of the sample data in <code>seed_data.sql</code>.</footer>
+</div>
+<script>
+const D = {"period": "27 Jul - 25 Oct 2026", "kpi": {"revenue": 117030.5, "orders": 638, "units": 2660, "aov": 183.43, "profit": 35032.0, "margin": 29.9}, "weekly": [{"label": "27 Jul", "revenue": 9877.5}, {"label": "3 Aug", "revenue": 10030.5}, {"label": "10 Aug", "revenue": 8605.0}, {"label": "17 Aug", "revenue": 8245.0}, {"label": "24 Aug", "revenue": 8024.5}, {"label": "31 Aug", "revenue": 9086.0}, {"label": "7 Sep", "revenue": 10666.5}, {"label": "14 Sep", "revenue": 11058.5}, {"label": "21 Sep", "revenue": 6351.0}, {"label": "28 Sep", "revenue": 9278.5}, {"label": "5 Oct", "revenue": 9092.5}, {"label": "12 Oct", "revenue": 8914.5}, {"label": "19 Oct", "revenue": 7800.5}], "categories": [{"name": "Household", "revenue": 25399.0}, {"name": "Dairy & Eggs", "revenue": 24585.5}, {"name": "Electronics Accessories", "revenue": 18281.5}, {"name": "Beverages", "revenue": 14564.5}, {"name": "Personal Care", "revenue": 12247.0}, {"name": "Snacks", "revenue": 11214.0}, {"name": "Bakery", "revenue": 8588.5}, {"name": "Stationery", "revenue": 2150.5}], "top": [{"name": "Toilet Paper 9s", "revenue": 13351.5}, {"name": "Laundry Powder 2kg", "revenue": 7703.5}, {"name": "Phone Charger 20W", "revenue": 6817.5}, {"name": "Large Eggs 18s", "revenue": 6391.0}, {"name": "Instant Coffee 250g", "revenue": 6039.0}, {"name": "USB-C Cable 1m", "revenue": 5800.0}, {"name": "AA Batteries 8-pack", "revenue": 5664.0}, {"name": "Cheddar Cheese 400g", "revenue": 5220.0}, {"name": "Full Cream Milk 2L", "revenue": 5146.0}, {"name": "Biltong 100g", "revenue": 4704.0}], "reorder": [{"name": "Large Eggs 18s", "supplier": "FreshCo Distributors", "qty": 14, "level": 20, "lead": 3}, {"name": "USB-C Cable 1m", "supplier": "TechParts Africa", "qty": 24, "level": 29, "lead": 10}, {"name": "Butter 500g", "supplier": "FreshCo Distributors", "qty": 14, "level": 18, "lead": 3}, {"name": "Still Water 500ml", "supplier": "Cape Wholesale Foods", "qty": 13, "level": 16, "lead": 5}, {"name": "Full Cream Milk 2L", "supplier": "FreshCo Distributors", "qty": 23, "level": 24, "lead": 3}, {"name": "Toilet Paper 9s", "supplier": "HomeEssentials SA", "qty": 11, "level": 12, "lead": 7}, {"name": "White Bread", "supplier": "FreshCo Distributors", "qty": 22, "level": 22, "lead": 3}], "slow": [{"name": "Earphones", "qty": 58, "capital": 4930.0}, {"name": "Highlighters 4-pack", "qty": 54, "capital": 1512.0}, {"name": "Surface Cleaner 500ml", "qty": 44, "capital": 1144.0}, {"name": "Cream Crackers 200g", "qty": 53, "capital": 636.0}]};
+const R = n => "R " + Number(n).toLocaleString("en-US", {maximumFractionDigits: 0});
+document.getElementById("period").textContent = D.period;
+
+const k = D.kpi;
+const kp = [["Revenue", R(k.revenue)], ["Orders", k.orders.toLocaleString("en-US")], ["Units sold", k.units.toLocaleString("en-US")],
+            ["Avg order value", "R " + k.aov.toFixed(2)], ["Gross profit", R(k.profit) + " (" + k.margin + "%)"]];
+document.getElementById("kpis").innerHTML = kp.map(([l, v]) => `<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div></div>`).join("");
+
+Chart.defaults.font.family = "system-ui, sans-serif";
+Chart.defaults.color = "#6b7385";
+const money = {ticks: {callback: v => "R " + v.toLocaleString("en-US")}, beginAtZero: true};
+const base = {maintainAspectRatio: false, plugins: {legend: {display: false}}};
+
+new Chart(document.getElementById("weekly"), {type: "line",
+  data: {labels: D.weekly.map(w => w.label), datasets: [{data: D.weekly.map(w => w.revenue), borderColor: "#2f6fed", backgroundColor: "rgba(47,111,237,.12)", fill: true, tension: .3, pointRadius: 3}]},
+  options: {...base, scales: {y: money}}});
+
+new Chart(document.getElementById("cats"), {type: "bar",
+  data: {labels: D.categories.map(c => c.name), datasets: [{data: D.categories.map(c => c.revenue), backgroundColor: "#2f6fed", borderRadius: 4}]},
+  options: {...base, indexAxis: "y", scales: {x: money}}});
+
+new Chart(document.getElementById("top"), {type: "bar",
+  data: {labels: D.top.map(p => p.name), datasets: [{data: D.top.map(p => p.revenue), backgroundColor: "#1f9d6b", borderRadius: 4}]},
+  options: {...base, scales: {y: money}}});
+
+document.getElementById("reorder").innerHTML = D.reorder.map(r =>
+  `<tr><td>${r.name}</td><td>${r.supplier}</td><td class="num"><span class="badge ${r.qty === 0 ? "bad" : "warn"}">${r.qty}</span></td><td class="num">${r.level}</td><td class="num">${r.lead}d</td></tr>`).join("");
+document.getElementById("slow").innerHTML = D.slow.map(r =>
+  `<tr><td>${r.name}</td><td class="num">${r.qty}</td><td class="num">R ${r.capital.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>`).join("");
+</script>
+</body>
+</html>
