@@ -11,6 +11,9 @@ A small retailer loses money in two ways: **stockouts** (lost sales) and **overs
 ## Tech
 Microsoft SQL Server (T-SQL), SSMS / Azure Data Studio.
 
+## Live dashboard
+https://rabomatjokotja777.github.io/retailstock-mssql/
+
 ## Entity relationship diagram
 
 ```mermaid
