@@ -9,7 +9,7 @@ A small retailer loses money in two ways: **stockouts** (lost sales) and **overs
 - sales trends and best sellers can be reported with plain SQL.
 
 ## Tech
-Microsoft SQL Server (T-SQL), SSMS / Azure Data Studio.
+Microsoft SQL Server (T-SQL).
 
 ## Live dashboard
 https://rabomatjokotja777.github.io/retailstock-mssql/
