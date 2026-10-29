@@ -1,16 +1,7 @@
-/* ============================================================
-   RetailStock: Inventory & Sales Database (MS SQL Server)
-   Problem: a retailer loses money on stockouts and overstock.
-   This schema tracks stock, sales and supplier orders so that
-   reorder needs and slow-moving stock are visible automatically.
-   ============================================================ */
-
 IF DB_ID('RetailStock') IS NULL CREATE DATABASE RetailStock;
 GO
 USE RetailStock;
 GO
-
-/* ---------- Tables ---------- */
 
 CREATE TABLE dbo.Categories (
     CategoryID   INT IDENTITY(1,1) PRIMARY KEY,
@@ -65,7 +56,7 @@ CREATE TABLE dbo.OrderItems (
     OrderID     INT NOT NULL REFERENCES dbo.Orders(OrderID),
     ProductID   INT NOT NULL REFERENCES dbo.Products(ProductID),
     Quantity    INT NOT NULL CHECK (Quantity > 0),
-    UnitPrice   DECIMAL(10,2) NOT NULL CHECK (UnitPrice >= 0),  -- price at time of sale
+    UnitPrice   DECIMAL(10,2) NOT NULL CHECK (UnitPrice >= 0),
     CONSTRAINT UQ_OrderItems UNIQUE (OrderID, ProductID)
 );
 
@@ -88,14 +79,12 @@ CREATE TABLE dbo.PurchaseOrderItems (
 CREATE TABLE dbo.StockMovements (
     MovementID   BIGINT IDENTITY(1,1) PRIMARY KEY,
     ProductID    INT NOT NULL REFERENCES dbo.Products(ProductID),
-    QtyChange    INT NOT NULL,                       -- negative = sale, positive = restock
-    Reason       NVARCHAR(30) NOT NULL,              -- 'Sale','Restock','Adjustment'
+    QtyChange    INT NOT NULL,                      
+    Reason       NVARCHAR(30) NOT NULL,              
     MovedAt      DATETIME2 NOT NULL CONSTRAINT DF_SM_At DEFAULT SYSDATETIME()
 );
 GO
-
-/* ---------- Indexes (each one has a reason) ---------- */
-
+   
 -- Sales reports filter and group by date constantly
 CREATE INDEX IX_Orders_OrderDate ON dbo.Orders(OrderDate) INCLUDE (CustomerID, Status);
 -- Joining items back to products for revenue-per-product queries
@@ -104,7 +93,6 @@ CREATE INDEX IX_OrderItems_ProductID ON dbo.OrderItems(ProductID) INCLUDE (Quant
 CREATE INDEX IX_StockMovements_Product_Date ON dbo.StockMovements(ProductID, MovedAt);
 GO
 
-/* ---------- Trigger: keep stock in sync with sales ---------- */
 
 CREATE OR ALTER TRIGGER dbo.trg_OrderItems_AfterInsert
 ON dbo.OrderItems
@@ -124,12 +112,9 @@ BEGIN
     INSERT dbo.StockMovements (ProductID, QtyChange, Reason)
     SELECT ProductID, -SUM(Quantity), 'Sale'
       FROM inserted GROUP BY ProductID;
-    -- If stock would go below zero, the CHECK on QtyOnHand fails
-    -- and the whole sale is rolled back (no overselling).
 END;
 GO
 
-/* ---------- View: products that need reordering ---------- */
 
 CREATE OR ALTER VIEW dbo.vw_ReorderNeeded AS
 SELECT p.ProductID, p.SKU, p.ProductName, s.SupplierName,
@@ -140,8 +125,6 @@ SELECT p.ProductID, p.SKU, p.ProductName, s.SupplierName,
  WHERE p.IsActive = 1
    AND i.QtyOnHand <= p.ReorderLevel;
 GO
-
-/* ---------- View: slow-moving stock (no sales in 90 days) ---------- */
 
 CREATE OR ALTER VIEW dbo.vw_SlowMovers AS
 SELECT p.ProductID, p.SKU, p.ProductName, i.QtyOnHand,
@@ -156,8 +139,6 @@ SELECT p.ProductID, p.SKU, p.ProductName, i.QtyOnHand,
 HAVING MAX(o.OrderDate) IS NULL
     OR MAX(o.OrderDate) < DATEADD(DAY, -90, SYSDATETIME());
 GO
-
-/* ---------- Procedure: create purchase orders for low stock ---------- */
 
 CREATE OR ALTER PROCEDURE dbo.usp_GenerateReorders
 AS
