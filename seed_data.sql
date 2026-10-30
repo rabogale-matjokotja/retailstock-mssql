@@ -1,6 +1,3 @@
-/* RetailStock sample data. Run on a FRESH database right after schema.sql
-   (IDs rely on identity columns starting at 1). Covers 27 Jul - 25 Oct 2026. */
-
 USE RetailStock;
 GO
 
@@ -61,8 +58,6 @@ INSERT INTO dbo.Products (SKU, ProductName, CategoryID, SupplierID, CostPrice, S
   (N'ELE-035', N'Earphones', 8, 4, 85.00, 107.50, 10, 100),
   (N'ELE-036', N'AA Batteries 8-pack', 8, 4, 70.00, 88.50, 23, 60);
 GO
-
--- Starting stock = final stock + units sold in the period; the sales trigger deducts the rest.
 
 INSERT INTO dbo.Inventory (ProductID, QtyOnHand) VALUES
   (1, 137),
@@ -789,8 +784,6 @@ INSERT INTO dbo.Orders (CustomerID, OrderDate, Status) VALUES
   (23, '2026-10-25 15:05:37', 'Completed'),
   (31, '2026-10-25 19:30:22', 'Completed');
 GO
-
--- Inserting order items fires trg_OrderItems_AfterInsert, which updates stock and logs movements.
 
 INSERT INTO dbo.OrderItems (OrderID, ProductID, Quantity, UnitPrice) VALUES
   (1, 23, 1, 103.50),
