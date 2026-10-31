@@ -3,7 +3,7 @@
 ## The problem
 A small retailer loses money in two ways: **stockouts** (lost sales) and **overstock** (cash tied up in products that don't sell). This database tracks products, stock levels, sales and supplier orders so that:
 
-- low stock is flagged automatically and purchase orders can be generated,
+- low stock is flagged automatically and purchase orders can be generated.
 - stock updates itself whenever a sale is recorded (and overselling is blocked),
 - slow-moving products and the capital tied up in them are easy to find,
 - sales trends and best sellers can be reported with plain SQL.
